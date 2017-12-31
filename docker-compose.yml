@@ -1,0 +1,31 @@
+version: '3.3'
+
+services:
+  mongo:
+    image: 'bitnami/mongodb:latest'
+    ports:
+      - '27017:27017'
+    environment:
+      - MONGODB_USERNAME=test
+      - MONGODB_PASSWORD=test
+      - MONGODB_DATABASE=test
+  vertx-mongo-starter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vertx-mongo-starter
+    links:
+      - mongo
+    environment:
+      - ADDITIONAL_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_USERNAME=test
+      - MONGODB_PASSWORD=test
+      - MONGODB_DATABASE=test
+
+    depends_on:
+      - mongo
+    ports:
+      - "5005:5005"
+      - "8080:8080"

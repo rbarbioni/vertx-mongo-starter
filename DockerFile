@@ -1,0 +1,13 @@
+FROM vertx/vertx3
+
+RUN mkdir workspace
+
+WORKDIR workspace
+
+ADD ./build/libs/vertx-mongo-starter-1.0.0-SNAPSHOT-fat.jar app.jar
+
+EXPOSE 5005
+
+EXPOSE 8085
+
+CMD java -jar ${ADDITIONAL_OPTS} app.jar
