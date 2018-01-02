@@ -1,8 +1,10 @@
 package br.com.rbarbioni.vertx.service;
 
 import br.com.rbarbioni.vertx.repository.ProductRepository;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.impl.HttpStatusException;
 
 
 public class ProductService {
@@ -15,19 +17,29 @@ public class ProductService {
 
     public void update(RoutingContext context){
 
-        this.productRepository.findById(context, res -> {
+        this.productRepository.findById(context, findRes -> {
 
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
-
-                
-                res.result().stream()
+            if (findRes.succeeded()) {
+                findRes.result()
+                    .stream()
                     .findFirst()
-                    .or
+                    .map(data -> {
+                        this.productRepository.save(context, res -> {
 
-
+                            if (res.succeeded()) {
+                                context.response().end(Json.encodePrettily(res.result()));
+                            }else{
+                                context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
+                            }
+                        });
+                        return null;
+                    })
+                    .orElseGet(() -> {
+                        context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
+                        return null;
+                    });
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(500).end();
             }
         });
 
@@ -36,7 +48,7 @@ public class ProductService {
             if (res.succeeded()) {
                 context.response().end(Json.encodePrettily(res.result()));
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(500).end();
             }
         });
     }
@@ -47,7 +59,7 @@ public class ProductService {
             if (res.succeeded()) {
                 context.response().end(Json.encodePrettily(res.result()));
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(500).end();
             }
         });
     }
@@ -58,7 +70,7 @@ public class ProductService {
             if (res.succeeded()) {
                 context.response().end(Json.encodePrettily(res.result()));
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(500).end();
             }
         });
     }
@@ -66,21 +78,42 @@ public class ProductService {
     public void findById(RoutingContext context){
         this.productRepository.findById(context, res -> {
 
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
+            if (res.succeeded() && res.result() != null) {
+                res.result()
+                    .stream()
+                    .findFirst()
+                    .map(data -> {
+                        context.response().end(Json.encodePrettily(data));
+                        return null;
+                    })
+                    .orElseThrow(() -> new HttpStatusException(HttpResponseStatus.NOT_FOUND.code()));
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(500).end();
             }
         });
     }
 
-    public void remove (RoutingContext context){
-        this.productRepository.remove(context, res -> {
+    public void delete (RoutingContext context){
+        this.productRepository.findById(context, resFind -> {
 
-            if (res.succeeded()) {
-                context.response().setStatusCode(200).end();
+            if (resFind.succeeded()) {
+                resFind.result()
+                    .stream()
+                    .findFirst()
+                    .map(data -> {
+                        this.productRepository.delete(context, res -> {
+
+                            if (res.succeeded()) {
+                                context.response().setStatusCode(200).end();
+                            }else{
+                                context.response().setStatusCode(500).end();
+                            }
+                        });
+                        return null;
+                    })
+                    .orElseThrow(() -> new HttpStatusException(HttpResponseStatus.NOT_FOUND.code()));;
             }else{
-                throw new RuntimeException(res.cause());
+                context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
             }
         });
     }

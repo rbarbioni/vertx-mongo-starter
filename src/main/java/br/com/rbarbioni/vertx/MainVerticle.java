@@ -8,6 +8,8 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         super.start();
+        vertx.exceptionHandler(e -> e.printStackTrace());
         vertx.deployVerticle(new RouteVerticle());
+
     }
 }

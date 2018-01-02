@@ -31,8 +31,12 @@ public class ProductRepository {
         this.mongoClient.save(COLLECTION_NAME, context.getBodyAsJson(), handler);
     }
 
-    public void remove (RoutingContext context, Handler<AsyncResult<MongoClientDeleteResult>> handler){
-        this.mongoClient.removeDocument(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
+    public void findOneAndUpdate (RoutingContext context, Handler<AsyncResult<JsonObject>>  handler){
+        this.mongoClient.findOneAndUpdate(COLLECTION_NAME,  new JsonObject().put("id", context.request().getParam("id")), context.getBodyAsJson(), handler);
+    }
+
+    public void delete (RoutingContext context, Handler<AsyncResult<JsonObject>> handler){
+        this.mongoClient.findOneAndDelete(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
     }
 
     public void findAll (RoutingContext context, Handler<AsyncResult<List<JsonObject>>> handler){
