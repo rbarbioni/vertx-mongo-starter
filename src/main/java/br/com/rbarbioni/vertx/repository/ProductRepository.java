@@ -1,10 +1,14 @@
 package br.com.rbarbioni.vertx.repository;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.mongo.MongoClientDeleteResult;
 import io.vertx.ext.web.RoutingContext;
+
+import java.util.List;
 
 public class ProductRepository {
 
@@ -23,47 +27,19 @@ public class ProductRepository {
     }
 
 
-    public void save (RoutingContext context){
-        this.mongoClient.save(COLLECTION_NAME, context.getBodyAsJson(), res -> {
-
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
-            }else{
-                throw new RuntimeException(res.cause());
-            }
-        });
+    public void save (RoutingContext context, Handler<AsyncResult<String>> handler){
+        this.mongoClient.save(COLLECTION_NAME, context.getBodyAsJson(), handler);
     }
 
-    public void remove (RoutingContext context){
-        this.mongoClient.removeDocument(COLLECTION_NAME, context.getBodyAsJson(), res -> {
-
-            if (res.succeeded()) {
-                context.response().setStatusCode(200).end();
-            }else{
-                throw new RuntimeException(res.cause());
-            }
-        });
+    public void remove (RoutingContext context, Handler<AsyncResult<MongoClientDeleteResult>> handler){
+        this.mongoClient.removeDocument(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
     }
 
-    public void findAll (RoutingContext context){
-        this.mongoClient.find(COLLECTION_NAME, new JsonObject(), res -> {
-
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
-            }else{
-                throw new RuntimeException(res.cause());
-            }
-        });
+    public void findAll (RoutingContext context, Handler<AsyncResult<List<JsonObject>>> handler){
+        this.mongoClient.find(COLLECTION_NAME, new JsonObject(), handler);
     }
 
-    public void findById (RoutingContext context){
-        this.mongoClient.find(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), res -> {
-
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
-            }else{
-                throw new RuntimeException(res.cause());
-            }
-        });
+    public void findById (RoutingContext context, Handler<AsyncResult<List<JsonObject>>> handler){
+        this.mongoClient.find(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
     }
 }
