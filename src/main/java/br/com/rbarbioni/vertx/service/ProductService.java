@@ -1,10 +1,10 @@
 package br.com.rbarbioni.vertx.service;
 
+import br.com.rbarbioni.vertx.exception.RouteException;
 import br.com.rbarbioni.vertx.repository.ProductRepository;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.impl.HttpStatusException;
 
 
 public class ProductService {
@@ -17,40 +17,15 @@ public class ProductService {
 
     public void update(RoutingContext context){
 
-        this.productRepository.findById(context, findRes -> {
-
-            if (findRes.succeeded()) {
-                findRes.result()
-                    .stream()
-                    .findFirst()
-                    .map(data -> {
-                        this.productRepository.save(context, res -> {
-
-                            if (res.succeeded()) {
-                                context.response().end(Json.encodePrettily(res.result()));
-                            }else{
-                                context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
-                            }
-                        });
-                        return null;
-                    })
-                    .orElseGet(() -> {
-                        context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
-                        return null;
-                    });
-            }else{
-                context.response().setStatusCode(500).end();
-            }
-        });
-
-        this.productRepository.save(context, res -> {
-
-            if (res.succeeded()) {
-                context.response().end(Json.encodePrettily(res.result()));
-            }else{
-                context.response().setStatusCode(500).end();
-            }
-        });
+      this.productRepository.findOneAndUpdate(context, res -> {
+		  if (res.succeeded() || res.result() != null) {
+			  context.response().end(Json.encodePrettily(res.result()));
+          }else if(res.cause() != null){
+              context.fail(new RouteException(res.cause()));
+		  }else{
+			  context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
+		  }
+      });
     }
 
     public void create(RoutingContext context){
@@ -59,7 +34,7 @@ public class ProductService {
             if (res.succeeded()) {
                 context.response().end(Json.encodePrettily(res.result()));
             }else{
-                context.response().setStatusCode(500).end();
+                context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
             }
         });
     }
@@ -70,7 +45,7 @@ public class ProductService {
             if (res.succeeded()) {
                 context.response().end(Json.encodePrettily(res.result()));
             }else{
-                context.response().setStatusCode(500).end();
+                context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
             }
         });
     }
@@ -86,9 +61,12 @@ public class ProductService {
                         context.response().end(Json.encodePrettily(data));
                         return null;
                     })
-                    .orElseThrow(() -> new HttpStatusException(HttpResponseStatus.NOT_FOUND.code()));
+                    .orElseGet(() -> {
+                        context.fail(new RouteException(HttpResponseStatus.NOT_FOUND));
+                        return null;
+                    });
             }else{
-                context.response().setStatusCode(500).end();
+                context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
             }
         });
     }
@@ -104,16 +82,16 @@ public class ProductService {
                         this.productRepository.delete(context, res -> {
 
                             if (res.succeeded()) {
-                                context.response().setStatusCode(200).end();
+                                context.response().setStatusCode(HttpResponseStatus.NO_CONTENT.code()).end();
                             }else{
-                                context.response().setStatusCode(500).end();
+                                context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
                             }
                         });
                         return null;
                     })
-                    .orElseThrow(() -> new HttpStatusException(HttpResponseStatus.NOT_FOUND.code()));;
+                    .orElseThrow(() -> new RouteException(HttpResponseStatus.NOT_FOUND));
             }else{
-                context.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
+                context.fail(new RouteException(HttpResponseStatus.INTERNAL_SERVER_ERROR));
             }
         });
     }

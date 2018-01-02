@@ -5,7 +5,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.List;
@@ -32,11 +31,12 @@ public class ProductRepository {
     }
 
     public void findOneAndUpdate (RoutingContext context, Handler<AsyncResult<JsonObject>>  handler){
-        this.mongoClient.findOneAndUpdate(COLLECTION_NAME,  new JsonObject().put("id", context.request().getParam("id")), context.getBodyAsJson(), handler);
+        this.mongoClient.findOneAndUpdate(COLLECTION_NAME, new JsonObject().put("_id", context.request().getParam("id")),
+        new JsonObject().put("$set", context.getBodyAsJson()), handler);
     }
 
     public void delete (RoutingContext context, Handler<AsyncResult<JsonObject>> handler){
-        this.mongoClient.findOneAndDelete(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
+        this.mongoClient.findOneAndDelete(COLLECTION_NAME, new JsonObject().put("_id", context.request().getParam("id")), handler);
     }
 
     public void findAll (RoutingContext context, Handler<AsyncResult<List<JsonObject>>> handler){
@@ -44,6 +44,6 @@ public class ProductRepository {
     }
 
     public void findById (RoutingContext context, Handler<AsyncResult<List<JsonObject>>> handler){
-        this.mongoClient.find(COLLECTION_NAME, new JsonObject().put("id", context.request().getParam("id")), handler);
+        this.mongoClient.find(COLLECTION_NAME, new JsonObject().put("_id", context.request().getParam("id")), handler);
     }
 }

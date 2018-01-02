@@ -1,67 +1,72 @@
 package br.com.rbarbioni.vertx.route;
 
+import br.com.rbarbioni.vertx.exception.RouteException;
 import br.com.rbarbioni.vertx.service.ProductService;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Context;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RouteVerticle extends AbstractVerticle {
 
-    private static final String PATH = "/product";
+  private Logger log = LoggerFactory.getLogger(getClass());
 
-    public RouteVerticle() {
-        this.productService = new ProductService();
-    }
+  private static final String PATH = "/product";
 
-    private final ProductService productService;
 
-    @Override
-    public void start() {
+  public RouteVerticle() {
+    this.productService = new ProductService();
+  }
 
-        Router router = Router.router(super.vertx);
+  private final ProductService productService;
 
-        // Http Filter with Error Handling
-        router.route("/*").handler(routingContext -> httpFilter(routingContext));
-        router.exceptionHandler(e -> e.printStackTrace());
+  @Override
+  public void start() {
 
-        router.route().handler(BodyHandler.create());
-        router.get(PATH).handler(productService::findAll);
-        router.get( PATH.concat("/:id")).handler(productService::findById);
-        router.post(PATH).handler(productService::create);
-        router.put(PATH.concat("/:id")).handler(productService::update);
-        router.delete(PATH.concat("/:id")).handler(productService::delete);
+    Router router = Router.router(getVertx());
 
-        router.exceptionHandler(throwable -> throwable.printStackTrace());
+    // setup
+    router.route("/*").handler(this::httpFilter);
+    router.route().failureHandler(this::sendResponseError);
+    router.exceptionHandler(this::logError);
+    router.route().handler(BodyHandler.create());
 
-        vertx.createHttpServer()
-            .requestHandler(router::accept)
-            .listen(8888);
-    }
+    // routes
+    router.get(PATH).handler(productService::findAll);
+    router.get(PATH.concat("/:id")).handler(productService::findById);
+    router.post(PATH).handler(productService::create);
+    router.put(PATH.concat("/:id")).handler(productService::update);
+    router.delete(PATH.concat("/:id")).handler(productService::delete);
 
-    private void httpFilter(RoutingContext routingContext){
-        System.out.println("Http Filter");
-        routingContext.next();
-    }
+    vertx.createHttpServer().requestHandler(router::accept).listen(8888);
+  }
 
-    private void sendResponseError(RoutingContext context){
-        final JsonObject json = new JsonObject()
-            .put("timestamp", System.nanoTime())
-            .put("status", context.statusCode())
-            .put("error", HttpResponseStatus.valueOf(context.statusCode()).reasonPhrase())
-            .put("path", context.request().path());
+  private void logError(Throwable throwable) {
+    log.error("Error", throwable);
+  }
 
-        final String message = context.get("message");
+  private void httpFilter(RoutingContext context) {
+    log.debug("Routing {}", context.request().rawMethod() + " - " + context.request().path());
+    context.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8");
+    context.next();
+  }
 
-        if(message != null) {
-            json.put("message", message);
-        }
+  private void sendResponseError(RoutingContext context) {
 
-        context.response().putHeader(HttpHeaders.CONTENT_TYPE,"application/json; charset=utf-8");
-        context.response().end(json.encodePrettily());
-    }
+    final RouteException exception = (RouteException) context.failure();
+
+    final JsonObject json = new JsonObject()
+      .put("timestamp", System.nanoTime())
+      .put("status", exception.getStatusCode())
+      .put("error", exception.getMessage())
+      .put("path", context.request().path());
+
+    String error = json.encodePrettily();
+    context.response().end(error);
+    log.debug("Routing Error {}", error);
+  }
 }

@@ -5,10 +5,12 @@ import io.vertx.core.AbstractVerticle;
 
 public class MainVerticle extends AbstractVerticle {
 
+    public MainVerticle(){
+        System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.SLF4JLogDelegateFactory");
+    }
     @Override
     public void start() throws Exception {
         super.start();
-        vertx.exceptionHandler(e -> e.printStackTrace());
         vertx.deployVerticle(new RouteVerticle());
 
     }
