@@ -1,0 +1,5 @@
+{
+    "mongodb_connection": "mongodb://mongo:27017/test",
+    "mongodb_username": "test",
+    "mongodb_password": "test"
+}
