@@ -1,5 +1,14 @@
+
+
 {
-    "mongodb_connection": "mongodb://mongodb:27017/test",
-    "mongodb_username": "test",
-    "mongodb_password": "test"
+    "ha": false,
+    "instances": 1,
+    "multiThreaded": false,
+    "worker": false,
+    "workerPoolName": "starter-mongo-worker",
+    "workerPoolSize": 10,
+    "config": {
+        "connection_string": "mongodb://mongodb:27017/test"
+    },
+
 }

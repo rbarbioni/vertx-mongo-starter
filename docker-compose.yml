@@ -18,10 +18,8 @@ services:
       - mongodb
     environment:
       - ADDITIONAL_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
-      - MONGODB_HOST=mongo
+      - MONGODB_HOST=mongodb
       - MONGODB_PORT=27017
-      - MONGODB_USERNAME=test
-      - MONGODB_PASSWORD=test
       - MONGODB_DATABASE=test
 
     depends_on:

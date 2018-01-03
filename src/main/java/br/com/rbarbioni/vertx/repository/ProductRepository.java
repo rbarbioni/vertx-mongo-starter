@@ -1,6 +1,7 @@
 package br.com.rbarbioni.vertx.repository;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -16,13 +17,8 @@ public class ProductRepository {
     private final MongoClient mongoClient;
 
     public ProductRepository (){
-        mongoClient = MongoClient.createNonShared(Vertx.vertx(),
-            new JsonObject()
-                .put("connection_string", "mongodb://localhost:27017/test")
-                .put("db_name", "test")
-                .put("username", "test")
-                .put("password", "test")
-        );
+        Context context = Vertx.currentContext();
+        mongoClient = MongoClient.createNonShared(context.owner(), context.config());
     }
 
 
