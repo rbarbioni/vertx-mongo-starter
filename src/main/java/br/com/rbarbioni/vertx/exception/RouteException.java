@@ -8,11 +8,15 @@ public class RouteException extends VertxException {
 
     private int statusCode = 500;
 
+    public RouteException(HttpResponseStatus status, Throwable cause) {
+        super(status.reasonPhrase(), cause);
+        this.statusCode = status.code();
+    }
+
     public RouteException(HttpResponseStatus status) {
         super(status.reasonPhrase(), new HttpStatusException(status.code()));
         this.statusCode = status.code();
     }
-
     public RouteException(String message) {
         super(message);
     }

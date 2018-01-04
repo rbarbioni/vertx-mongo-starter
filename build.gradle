@@ -30,6 +30,12 @@ dependencies {
   compile "io.vertx:vertx-mongo-client:$vertxVersion"
 
   compile "ch.qos.logback:logback-classic:1.2.3"
+
+  compile "org.hibernate:hibernate-validator:6.0.7.Final"
+
+  compile "javax.el:javax.el-api:3.0.0"
+
+  compile "org.glassfish.web:javax.el:2.2.6"
 }
 
 shadowJar {

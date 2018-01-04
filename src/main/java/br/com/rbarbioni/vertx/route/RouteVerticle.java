@@ -1,6 +1,7 @@
 package br.com.rbarbioni.vertx.route;
 
 import br.com.rbarbioni.vertx.exception.RouteException;
+import br.com.rbarbioni.vertx.model.Product;
 import br.com.rbarbioni.vertx.service.ProductService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpHeaders;
@@ -38,11 +39,14 @@ public class RouteVerticle extends AbstractVerticle {
     // routes
     router.get(PATH).handler(productService::findAll);
     router.get(PATH.concat("/:id")).handler(productService::findById);
+
+    router.post().handler(Product::validate);
     router.post(PATH).handler(productService::create);
+
     router.put(PATH.concat("/:id")).handler(productService::update);
     router.delete(PATH.concat("/:id")).handler(productService::delete);
 
-    vertx.createHttpServer().requestHandler(router::accept).listen(8888);
+    vertx.createHttpServer().requestHandler(router::accept).listen(8080);
   }
 
   private void logError(Throwable throwable) {
@@ -58,6 +62,8 @@ public class RouteVerticle extends AbstractVerticle {
   private void sendResponseError(RoutingContext context) {
 
     final RouteException exception = (RouteException) context.failure();
+
+    log.error("Error", exception.getCause());
 
     final JsonObject json = new JsonObject()
       .put("timestamp", System.nanoTime())

@@ -18,9 +18,8 @@ public class ProductRepository {
 
     public ProductRepository (){
         Context context = Vertx.currentContext();
-        mongoClient = MongoClient.createNonShared(context.owner(), context.config());
+        mongoClient = MongoClient.createNonShared(context.owner(), context.config().getJsonObject("config"));
     }
-
 
     public void save (RoutingContext context, Handler<AsyncResult<String>> handler){
         this.mongoClient.save(COLLECTION_NAME, context.getBodyAsJson(), handler);
